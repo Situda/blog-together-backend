@@ -19,6 +19,13 @@ app.add_middleware(
 async def root():
     return {"message": "Hello World"}
 
+"""
+    blog-together-backend  Copyright (C) 2025  Checkey_01
+    This program comes with ABSOLUTELY NO WARRANTY; for details type `show w'.
+    This is free software, and you are welcome to redistribute it
+    under certain conditions; type `show c' for details.
+"""
+
 if __name__ == "__main__":
     uvicorn.run("main:app", host="localhost", port=8000, reload=True)
 
