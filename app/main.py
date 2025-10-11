@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
+# 白名单url
 origins = [
     "http://localhost:5173",
 ]
@@ -18,6 +19,13 @@ app.add_middleware(
 @app.get("/")
 async def root():
     return {"message": "Hello World"}
+
+@app.get("/articles/tags/{tag}")
+async def get_articles(tag: str):
+    return {
+        "message": f"输入tag：{tag}",
+    }
+
 
 """
     blog-together-backend  Copyright (C) 2025  Checkey_01
