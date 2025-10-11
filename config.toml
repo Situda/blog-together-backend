@@ -1,0 +1,7 @@
+# 数据库配置
+[database]
+type = "sqlite"  # 数据库类型，如mysql, sqlite，全小写
+username = "root"  # sqlite无须指定
+password = ""  # sqlite无须指定
+server = "localhost"  # 默认localhost，可修改
+name = "blog_data"  # 默认为blog_data，type = "sqlite"，则会在项目根目录下创建同名sqlite数据库文件
