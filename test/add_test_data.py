@@ -6,18 +6,18 @@ import datetime
 def main():
     # 添加了三个测试文章tag
     with Session(db.engine) as session:
-        stmt = select(db.ArticleTypes)
+        stmt = select(db.ArticleTags)
         result = session.scalars(stmt)
         tags = result.fetchall()
         if len(tags) == 0:
             article_types = [
-                db.ArticleTypes(article_type_name="测试文章1"),
-                db.ArticleTypes(article_type_name="测试文章2"),
-                db.ArticleTypes(article_type_name="测试文章3"),
+                db.ArticleTags(article_type_name="测试文章1"),
+                db.ArticleTags(article_type_name="测试文章2"),
+                db.ArticleTags(article_type_name="测试文章3"),
             ]
             session.add_all(article_types)
             session.commit()
-        stmt = select(db.ArticleTypes)
+        stmt = select(db.ArticleTags)
         result = session.scalars(stmt)
         tags = result.fetchall()
         print(tags)
@@ -34,19 +34,19 @@ def main():
                             article_cover="There is no cover!",
                             article_abstract="第一篇文章",
                             article_content="## 第一篇第一节",
-                            article_type=tags[0].article_type_id),
+                            article_tag=tags[0].article_tag_id),
                 db.Articles(article_name="第二篇文章",
                             update_time=datetime.datetime.now(),
                             article_cover="There is no cover!",
                             article_abstract="第二篇文章",
                             article_content="## 第二篇第一节",
-                            article_type=tags[1].article_type_id),
+                            article_tag=tags[1].article_type_id),
                 db.Articles(article_name="第三篇文章",
                             update_time=datetime.datetime.now(),
                             article_cover="There is no cover!",
                             article_abstract="第三篇文章",
                             article_content="## 第三篇第一节",
-                            article_type=tags[2].article_type_id),
+                            article_tag=tags[2].article_type_id),
             ]
             session.add_all(articles)
             session.commit()

@@ -1,6 +1,6 @@
 import tomlkit
 from sqlalchemy import create_engine, Column, Unicode, Integer, DateTime, String, UnicodeText
-from sqlalchemy.orm import Session, DeclarativeBase
+from sqlalchemy.orm import DeclarativeBase
 
 
 class Base(DeclarativeBase):
@@ -19,7 +19,7 @@ class Articles(Base):
     article_cover: String = Column('article_cover', String(1024), nullable=False)  # 文章封面的URL
     article_abstract: String = Column('article_abstract', UnicodeText, nullable=False)   # 文章摘要（Markdown）
     article_content: UnicodeText = Column('article_content', UnicodeText, nullable=False)   # 文章正文（Markdown）
-    article_type: Integer = Column('article_type', Integer, nullable=False)   # 文章类型id
+    article_tag: Integer = Column('article_tag', Integer, nullable=False)   # 文章类型id
 
     def __repr__(self):
         return (f'Articles(article_id={self.article_id}, article_name={self.article_name}, '
@@ -46,16 +46,16 @@ class Projects(Base):
     project_description: Unicode = Column('project_description', UnicodeText, nullable=False)
     project_cover: String = Column('project_cover', String(1024), nullable=False)
 
-class ArticleTypes(Base):
+class ArticleTags(Base):
     """
     文章类型表
     """
-    __tablename__ = 'article_types'
-    article_type_id: Integer = Column('article_type_id', Integer, primary_key=True)
-    article_type_name: Unicode = Column('article_type_name', Unicode(30), nullable=False)
+    __tablename__ = 'article_tags'
+    article_tag_id: Integer = Column('article_tag_id', Integer, primary_key=True)
+    article_tag_name: Unicode = Column('article_tag_name', Unicode(30), nullable=False)
 
     def __repr__(self):
-        return f'ArticleTypes(article_type_id={self.article_type_id}, article_type_name={self.article_type_name})'
+        return f'ArticleTypes(article_tag_id={self.article_tag_id}, article_tag_name={self.article_tag_name})'
 
 
 with open("../config.toml", encoding='utf-8') as f:
