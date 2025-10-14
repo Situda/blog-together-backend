@@ -1,6 +1,7 @@
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+import routers
 
 app = FastAPI()
 
@@ -16,15 +17,14 @@ app.add_middleware(
     allow_methods=["*"],
 )
 
+
+# 文章查询的路由/article/*
+app.include_router(routers.articles.router)
+
+
 @app.get("/")
 async def root():
     return {"message": "Hello World"}
-
-@app.get("/articles/tags/{tag}")
-async def get_articles(tag: str):
-    return {
-        "message": f"输入tag：{tag}",
-    }
 
 
 """

@@ -7,7 +7,7 @@
 
 本项目使用GPL3.0协议。
 
-合作写的个人博客后端代码，前端项目指路：
+合作写的个人博客后端代码，目前处于开发状态，前端项目指路：
 https://github.com/Situda/blog-together-frontend
 
 请使用issue进行提问，不明所以的issue开发者不会回复。
