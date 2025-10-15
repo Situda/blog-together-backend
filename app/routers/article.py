@@ -35,11 +35,12 @@ async def articles_by_tag(tag: str = "all",
                 article_tag: 文章所属tag的id,
             }
     """
+    ret = None
     if is_series:
-        pass
+        return
     else:
-        pass
-    return
+        return
+
 
 @router.get("/{id}")
 async def article_by_id(id: int):
@@ -61,6 +62,20 @@ async def article_by_id(id: int):
             ```
     """
     pass
+
+@router.get("/tags")
+async def article_tags():
+    """
+    获取所有tag的列表
+    :return: 一个列表，其每个元素的值为如下
+            ```
+            {
+                "article_tag_id": 文章tag的id
+                "article_tag_name": 文章tag的名称
+            }
+            ```
+    """
+    return
 
 @router.get("/series/{series_id}")
 async def series_by_id(series_id: int):
