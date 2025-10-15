@@ -1,7 +1,7 @@
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-import routers
+import app.routers as routers
 
 app = FastAPI()
 
@@ -19,7 +19,7 @@ app.add_middleware(
 
 
 # 文章查询的路由/article/*
-app.include_router(routers.articles.router)
+app.include_router(routers.article.router)
 
 
 @app.get("/")
