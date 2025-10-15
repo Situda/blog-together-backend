@@ -44,4 +44,4 @@ class ArticleCategories(Base):
     article_category_name: Unicode = Column('article_category_name', Unicode(30), nullable=False, unique=True)
 
     def __repr__(self):
-        return f'ArticleTypes(article_category_id={self.article_category_id}, article_category_name={self.article_category_name})'
+        return f'ArticleCategories(article_category_id={self.article_category_id}, article_category_name={self.article_category_name})'
