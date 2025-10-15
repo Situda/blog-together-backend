@@ -16,7 +16,7 @@ class Articles(Base):
     article_cover: String = Column('article_cover', String(1024), nullable=False)  # 文章封面的URL
     article_abstract: String = Column('article_abstract', UnicodeText, nullable=False)   # 文章摘要（Markdown）
     article_content: UnicodeText = Column('article_content', UnicodeText, nullable=False)   # 文章正文（Markdown）
-    article_tag: Integer = Column('article_tag', Integer, nullable=False)   # 文章类型id
+    article_category: Integer = Column('article_category', Integer, nullable=False)   # 文章类型id
 
     def __repr__(self):
         return (f'Articles(article_id={self.article_id}, article_name={self.article_name}, '
@@ -35,13 +35,13 @@ class ArticleSeries(Base):
     series_cover: String = Column('series_cover', String(1024), nullable=False)
 
 
-class ArticleTags(Base):
+class ArticleCategories(Base):
     """
-    文章tag表
+    文章category表
     """
-    __tablename__ = 'article_tags'
-    article_tag_id: Integer = Column('article_tag_id', Integer, primary_key=True)
-    article_tag_name: Unicode = Column('article_tag_name', Unicode(30), nullable=False, unique=True)
+    __tablename__ = 'article_categories'
+    article_category_id: Integer = Column('article_category_id', Integer, primary_key=True)
+    article_category_name: Unicode = Column('article_category_name', Unicode(30), nullable=False, unique=True)
 
     def __repr__(self):
-        return f'ArticleTypes(article_tag_id={self.article_tag_id}, article_tag_name={self.article_tag_name})'
+        return f'ArticleTypes(article_category_id={self.article_category_id}, article_category_name={self.article_category_name})'

@@ -19,7 +19,7 @@ app.add_middleware(
 
 
 # 文章查询的路由/article/*
-app.include_router(routers.articles.router)
+app.include_router(routers.article.router)
 
 
 @app.get("/")
