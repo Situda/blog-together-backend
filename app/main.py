@@ -1,9 +1,22 @@
+import app.database as database
+import app.models as models
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import app.routers as routers
+from contextlib import asynccontextmanager
 
-app = FastAPI()
+
+
+@asynccontextmanager
+async def start_and_end(api: FastAPI):
+    # 初始化数据库
+    await database.create_db()
+    yield
+    await database.async_engine.dispose()
+
+
+app = FastAPI(lifespan=start_and_end)
 
 # 白名单url
 origins = [
