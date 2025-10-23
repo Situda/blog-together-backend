@@ -31,7 +31,7 @@ async def articles_by_category(items: Items):
             其中，"article_list"是一个文章列表，其每个元素为如下JSON:
             {
                 article_id: 文章id,
-                article_name: 文章标题,
+                article_title: 文章标题,
                 article_series: 文章所属系列的id，可能为空,
                 update_time: 文章更新日期,
                 article_cover: 文章封面的URL,
@@ -54,7 +54,7 @@ async def article_by_id(id: int):
             ```
             {
                 "article_id": 文章id,
-                "article_name": 文章标题,
+                "article_title": 文章标题,
                 "article_series": 文章所属系列的id，可能为空,
                 "update_time": 文章更新日期,
                 "article_cover": 文章封面的URL,

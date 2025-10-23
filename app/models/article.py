@@ -10,7 +10,7 @@ class Articles(Base):
     __tablename__ = 'articles'
 
     article_id: Integer = Column('article_id', Integer, primary_key=True)
-    article_name: Unicode = Column('article_name', Unicode(30), nullable=False)  # 最长存储30个unicode字符长度的文本
+    article_title: Unicode = Column('article_title', Unicode(30), nullable=False)  # 最长存储30个unicode字符长度的文本
     article_series: Integer = Column('article_series', Integer, nullable=True)  # 所属于的系列id
     update_time: DateTime = Column('update_time', DateTime, nullable=False)
     article_cover: String = Column('article_cover', String(1024), nullable=False)  # 文章封面的URL
@@ -19,7 +19,7 @@ class Articles(Base):
     article_category: Integer = Column('article_category', Integer, nullable=False)   # 文章类型id
 
     def __repr__(self):
-        return (f'Articles(article_id={self.article_id}, article_name={self.article_name}, '
+        return (f'Articles(article_id={self.article_id}, article_title={self.article_title}, '
                 f'article_series={self.article_series}, update_time={self.update_time})')
 
 
