@@ -1,4 +1,5 @@
 from fastapi import APIRouter
+from app.schemas.article import Items
 
 router = APIRouter(
     prefix="/articles",
@@ -7,16 +8,18 @@ router = APIRouter(
 )
 
 @router.get("/")
-async def articles_by_category(category: str = "all",
-                          is_series: bool = False,
-                          page: int = 1,
-                          per_page: int = 9):
+async def articles_by_category(items: Items):
     """
     获取全部文章
-    :param category: 文章category，可选，默认"all"，表示查询所有文章
-    :param is_series: 系列文章过滤器，True表示只返回系列文章的入口信息，False表示返回单个文章和系列文章的信息，默认False
-    :param page: 文章分页时的第几页，默认1
-    :param per_page: 每页的返回文章信息数量，默认9
+    :param items:
+        ```json
+        {
+            category: 文章category，可选，默认"all"，表示查询所有文章
+            is_series: 系列文章过滤器，True表示只返回系列文章的入口信息，False表示返回单个文章和系列文章的信息，默认False
+            page: 文章分页时的第几页，默认1
+            limit: 每页的返回文章信息数量，默认9
+        }
+        ```
     :return: 一个包含文章信息的列表，列表的每个元素是一个如下的JSON:
             {
                 "info": {
@@ -36,7 +39,7 @@ async def articles_by_category(category: str = "all",
             }
     """
     ret = None
-    if is_series:
+    if items.is_series:
         return
     else:
         return
