@@ -4,7 +4,8 @@ from sqlalchemy import URL, create_engine, text
 
 
 def get_database_url():
-    with open("../config.toml", encoding='utf-8') as f:
+    root_dir = os.path.abspath(os.path.dirname(__file__))
+    with open(f"{root_dir}/../config.toml", encoding='utf-8') as f:
         config: dict = tomlkit.parse(f.read())
 
 

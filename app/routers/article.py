@@ -12,7 +12,7 @@ async def articles_by_category(items: Items):
     """
     获取全部文章
     :param items:
-        ```json
+        ```
         {
             category: 文章category，可选，默认"all"，表示查询所有文章
             is_series: 系列文章过滤器，True表示只返回系列文章的入口信息，False表示返回单个文章和系列文章的信息，默认False
