@@ -16,3 +16,9 @@ class OKResponse(JSONResponse):
         self.status_code = status.HTTP_200_OK
         self.content = content
         super().__init__(status_code=self.status_code, content=self.content)
+
+class ErrorResponse(JSONResponse):
+    def __init__(self, error):
+        self.status_code = status.HTTP_404_NOT_FOUND
+        self.content = str(error)
+        super().__init__(status_code=self.status_code, content=self.content)

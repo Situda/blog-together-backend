@@ -1,20 +1,21 @@
-from fastapi import APIRouter, Query, Path
+from fastapi import APIRouter, Query, Path, HTTPException
 from fastapi.params import Depends
 from fastapi.responses import JSONResponse
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
-from app.crud.article import get_article_info, get_article_info_page_count
+from app.crud.article import get_article_info, get_article_info_page_count, get_article
 from app.database import get_database
 from typing import Annotated
+from app.api_responser import TodoResponse, OKResponse, ErrorResponse
 
 router = APIRouter(
     prefix="/articles",
-    tags=["articles"],
+    tags=["文章与系列查询"],
     responses={404: {"description": "Not found"}}
 )
 
-@router.get("")
+@router.get("",summary="分页查询文章/系列信息")
 async def articles_by_category(
         category: Annotated[str, Query(max_length=30)] = "all",
         is_series: bool = False,
@@ -51,13 +52,7 @@ async def articles_by_category(
     """
     # logger.debug(items.limit)
     if is_series:
-        return JSONResponse(
-            status_code=status.HTTP_404_NOT_FOUND,
-            content={
-                "status": "ERROR",
-                "message": "暂时未实现系列查询"
-            }
-        )
+        return TodoResponse()
     else:
         try:
             content = {
@@ -67,27 +62,22 @@ async def articles_by_category(
                 },
                 "article_list": await get_article_info(category, skip, limit, session)
             }
-            return JSONResponse(
-                status_code=status.HTTP_200_OK,
-                content=content
-            )
+            return OKResponse(content=content)
         except Exception as e:
             logger.error(e)
-            return JSONResponse(
-                status_code=status.HTTP_404_NOT_FOUND,
-                content={
-                    "status": "ERROR",
-                    "message": str(e)
-                }
-            )
+            return ErrorResponse(e)
 
 
-@router.get("/{id}")
-async def article_by_id(id: int):
+@router.get("/{article_id}", summary="查询文章信息")
+async def article_by_id(
+        article_id: Annotated[int, Path(title="article_id")],
+        session: AsyncSession = Depends(get_database)
+):
     """
     根据id获取某一文章的全部信息
-    :param id: 文章的id
-    :return: 文章的完整信息Json
+    :param article_id: 文章的id
+    :param session: 会话工厂
+    :return: 文章的完整信息Json，文章不存在或查询失败会返回404错误码和错误信息
             ```
             {
                 "article_id": 文章id,
@@ -101,9 +91,16 @@ async def article_by_id(id: int):
             }
             ```
     """
-    pass
+    try:
+        content = await get_article(article_id=article_id, session=session)
+        if not content:
+            raise HTTPException(status_code=404, detail=f"数据库中没有article_id = {article_id}的文章/系列")
+        return OKResponse(content=content)
+    except Exception as e:
+        logger.error(e)
+        return ErrorResponse(e)
 
-@router.get("/categories")
+@router.get("/categories", summary="待实现")
 async def article_categories():
     """
     获取所有category的列表
@@ -117,7 +114,7 @@ async def article_categories():
     """
     return
 
-@router.get("/series/{series_id}")
+@router.get("/series/{series_id}", summary="待实现")
 async def series_by_id(series_id: int):
     """
     TODO: 未来实现，通过series_id查询系列

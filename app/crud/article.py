@@ -61,3 +61,14 @@ async def get_article_info_page_count(
     result = await session.scalars(stmt)
     total_page = max(1, math.ceil(result.first() / limit))
     return total_page
+
+async def get_article(
+        article_id: int,
+        session: AsyncSession
+):
+    stmt = (
+        select(Articles)
+        .where(or_(Articles.article_id == article_id))
+    )
+    result = await session.scalars(stmt)
+    return result.first()
