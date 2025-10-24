@@ -35,7 +35,11 @@ async def lifespan(api: FastAPI) -> AsyncGenerator[dict[str, AsyncEngine | async
     logger.info("程序关闭成功！")
 
 
-app = FastAPI(lifespan=lifespan)
+app = FastAPI(
+    title="Blog Together Backend",
+    lifespan=lifespan,
+    version="0.0.1"
+)
 
 # 白名单url
 origins = [
@@ -56,6 +60,9 @@ app.include_router(routers.article.router)
 
 @app.get("/db-check")
 async def db_check(database: AsyncSession = Depends(db.get_database)):
+    """
+    用于测试后端数据库是否连接异常
+    """
     try:
         result = await database.execute(text("SELECT 1"))
         if result.scalar_one() == 1:
