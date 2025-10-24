@@ -1,5 +1,12 @@
-from fastapi import APIRouter
-from app.schemas.article import Items
+from fastapi import APIRouter, Query, Path
+from fastapi.params import Depends
+from fastapi.responses import JSONResponse
+from loguru import logger
+from sqlalchemy.ext.asyncio import AsyncSession
+from starlette import status
+from app.crud.article import get_article_info, get_article_info_page_count
+from app.database import get_database
+from typing import Annotated
 
 router = APIRouter(
     prefix="/articles",
@@ -7,20 +14,23 @@ router = APIRouter(
     responses={404: {"description": "Not found"}}
 )
 
-@router.get("/")
-async def articles_by_category(items: Items):
+@router.get("")
+async def articles_by_category(
+        category: Annotated[str, Query(max_length=30)] = "all",
+        is_series: bool = False,
+        skip: Annotated[int, Path(title="skip", ge=1)] = 1,
+        limit: Annotated[int, Path(title="limit", ge=1)] = 9,
+        session: AsyncSession = Depends(get_database)
+) -> JSONResponse:
     """
     获取全部文章
-    :param items:
-        ```
-        {
-            category: 文章category，可选，默认"all"，表示查询所有文章
-            is_series: 系列文章过滤器，True表示只返回系列文章的入口信息，False表示返回单个文章和系列文章的信息，默认False
-            page: 文章分页时的第几页，默认1
-            limit: 每页的返回文章信息数量，默认9
-        }
-        ```
+    :param category: 文章category，可选，默认"all"，表示查询所有文章
+    :param is_series: 系列文章过滤器，True表示只返回系列文章的入口信息，False表示返回单个文章和系列文章的信息，默认False
+    :param skip: 文章分页时的第几页，默认1
+    :param limit: 每页的返回文章信息数量，默认9
+    :param session:
     :return: 一个包含文章信息的列表，列表的每个元素是一个如下的JSON:
+            ```
             {
                 "info": {
                     "page": 当前页数,
@@ -37,12 +47,39 @@ async def articles_by_category(items: Items):
                 article_cover: 文章封面的URL,
                 article_category: 文章所属category的id,
             }
+            ```
     """
-    ret = None
-    if items.is_series:
-        return
+    # logger.debug(items.limit)
+    if is_series:
+        return JSONResponse(
+            status_code=status.HTTP_404_NOT_FOUND,
+            content={
+                "status": "ERROR",
+                "message": "暂时未实现系列查询"
+            }
+        )
     else:
-        return
+        try:
+            content = {
+                "info": {
+                    "page": skip,
+                    "total_page": await get_article_info_page_count(category, limit, session)
+                },
+                "article_list": await get_article_info(category, skip, limit, session)
+            }
+            return JSONResponse(
+                status_code=status.HTTP_200_OK,
+                content=content
+            )
+        except Exception as e:
+            logger.error(e)
+            return JSONResponse(
+                status_code=status.HTTP_404_NOT_FOUND,
+                content={
+                    "status": "ERROR",
+                    "message": str(e)
+                }
+            )
 
 
 @router.get("/{id}")

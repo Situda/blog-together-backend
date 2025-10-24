@@ -11,3 +11,11 @@ class Items(BaseModel):
     is_series: bool = False
     page: int = 1
     limit: int = 9
+
+class ArticleInfo(BaseModel):
+    article_id: int
+    article_title: str
+    article_series: str
+    update_time: str
+    article_cover: str
+    article_category: int

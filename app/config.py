@@ -11,7 +11,7 @@ def get_database_url():
 
     database_config: dict = config['database']
     if database_config['type'] == 'sqlite':
-        database_url: str | URL = f"sqlite+aiosqlite:///../{database_config['name']}.db"
+        database_url: str | URL = f"sqlite+aiosqlite:///{database_config['name']}.db"
     elif database_config['type'] == 'mysql':
         database_url: str | URL = URL.create(
             database_config['type'],
