@@ -1,3 +1,4 @@
+import datetime
 import math
 from typing import Sequence
 
@@ -72,3 +73,35 @@ async def get_article(
     )
     result = await session.scalars(stmt)
     return result.first()
+
+async def create_article(
+        article_title: str,
+        article_cover: str,
+        article_abstract: str,
+        article_content: str,
+        session: AsyncSession,
+        article_category: str = None,
+):
+    update_time = datetime.datetime.now()
+    if article_category is None:
+        article = Articles(
+            article_title=article_title,
+            article_cover=article_cover,
+            article_abstract=article_abstract,
+            article_content=article_content,
+            update_time=update_time,
+        )
+    else:
+        article = Articles(
+            article_title=article_title,
+            article_cover=article_cover,
+            article_abstract=article_abstract,
+            article_content=article_content,
+            update_time=update_time,
+            article_category=article_category
+        )
+    session.add_all(
+        [article, ]
+    )
+    await session.commit()
+    return True
