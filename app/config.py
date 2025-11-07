@@ -37,7 +37,8 @@ def get_database_url():
         database_config['type'] += '+asyncmy'
         database_url = database_url.set(
             drivername=database_config['type'],
-            database=database_config['name']
+            database=database_config['name'],
+            query={"charset": "utf8mb4"},
         )
     else:
         raise Exception(f"Unknown database type: {database_config['type']}. Please use `sqlite` or `mysql`.")
