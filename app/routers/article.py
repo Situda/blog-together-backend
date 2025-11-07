@@ -8,7 +8,7 @@ from app.crud.article import get_article_info, get_article_info_page_count, get_
 from app.database import get_database
 from typing import Annotated
 from app.api_responser import TodoResponse, OKResponse, ErrorResponse
-from app.schemas.article import ArticleAndSeriesFilterParams
+from app.schemas.article import ArticleAndSeriesFilterParams, ArticleCreatorParams
 
 router = APIRouter(
     prefix="/articles",
@@ -127,5 +127,9 @@ async def series_by_id(series_id: int):
     pass
 
 @router.post("/post/articles")
-async def post_articles():
-    pass
+async def post_articles(
+        creator_params: Annotated[ArticleCreatorParams, Query()],
+        session: AsyncSession = Depends(get_database)
+):
+    # TODO: 马上需要实现
+    return TodoResponse()

@@ -20,3 +20,21 @@ class ArticleInfo(BaseModel):
     update_time: str
     article_cover: str
     article_category: int
+
+
+
+class ArticleCreatorParams(BaseModel):
+    """
+    :param article_title: 文章标题
+    :param series_name: 文章所属系列名
+    :param article_cover: 封面URL
+    :param article_abstract: 文章摘要
+    :param article_content: 文章内容
+    :param category_name: 文章所属类别名
+    """
+    article_title: str
+    series_name: str = None
+    article_cover: str
+    article_abstract: str
+    article_content: str
+    category_name: str
