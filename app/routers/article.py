@@ -8,6 +8,7 @@ from app.crud.article import get_article_info, get_article_info_page_count, get_
 from app.database import get_database
 from typing import Annotated
 from app.api_responser import TodoResponse, OKResponse, ErrorResponse
+from app.schemas.article import ArticleAndSeriesFilterParams
 
 router = APIRouter(
     prefix="/articles",
@@ -17,18 +18,20 @@ router = APIRouter(
 
 @router.get("",summary="分页查询文章/系列信息")
 async def articles_by_category(
-        category: Annotated[str, Query(max_length=30)] = "all",
-        is_series: bool = False,
-        skip: Annotated[int, Path(title="skip", ge=1)] = 1,
-        limit: Annotated[int, Path(title="limit", ge=1)] = 9,
+        filter_params: Annotated[ArticleAndSeriesFilterParams, Query()],
+        # category: Annotated[str, Query(max_length=30)] = "all",
+        # is_series: bool = False,
+        # skip: Annotated[int, Path(title="skip", ge=1)] = 1,
+        # limit: Annotated[int, Path(title="limit", ge=1)] = 9,
         session: AsyncSession = Depends(get_database)
 ) -> JSONResponse:
     """
     获取全部文章
-    :param category: 文章category，可选，默认"all"，表示查询所有文章
-    :param is_series: 系列文章过滤器，True表示只返回系列文章的入口信息，False表示返回单个文章和系列文章的信息，默认False
-    :param skip: 文章分页时的第几页，默认1
-    :param limit: 每页的返回文章信息数量，默认9
+    :param filter_params:
+        category: 文章category，可选，默认"all"，表示查询所有文章
+        is_series: 系列文章过滤器，True表示只返回系列文章的入口信息，False表示返回单个文章和系列文章的信息，默认False
+         skip: 文章分页时的第几页，默认1
+        limit: 每页的返回文章信息数量，默认9
     :param session:
     :return: 一个包含文章信息的列表，列表的每个元素是一个如下的JSON:
             ```
@@ -51,16 +54,16 @@ async def articles_by_category(
             ```
     """
     # logger.debug(items.limit)
-    if is_series:
+    if filter_params.is_series:
         return TodoResponse()
     else:
         try:
             content = {
                 "info": {
-                    "page": skip,
-                    "total_page": await get_article_info_page_count(category, limit, session)
+                    "page": filter_params.skip,
+                    "total_page": await get_article_info_page_count(filter_params.category, filter_params.limit, session)
                 },
-                "article_list": await get_article_info(category, skip, limit, session)
+                "article_list": await get_article_info(filter_params.category, filter_params.skip, filter_params.limit, session)
             }
             return OKResponse(content=content)
         except Exception as e:
@@ -121,4 +124,8 @@ async def series_by_id(series_id: int):
     :param series_id:
     :return: TODO: 未来实现，文章系列的信息
     """
+    pass
+
+@router.post("/post/articles")
+async def post_articles():
     pass
