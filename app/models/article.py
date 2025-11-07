@@ -11,12 +11,12 @@ class Articles(Base):
 
     article_id: Integer = Column('article_id', Integer, primary_key=True)
     article_title: Unicode = Column('article_title', Unicode(30), nullable=False)  # 最长存储30个unicode字符长度的文本
-    series_id: Integer = Column('article_series', Integer, nullable=True)  # 所属于的系列id
+    series_id: Integer = Column('series_id', Integer, nullable=True)  # 所属于的系列id
     update_time: DateTime = Column('update_time', DateTime, nullable=False)
     article_cover: String = Column('article_cover', String(1024), nullable=False)  # 文章封面的URL
     article_abstract: String = Column('article_abstract', UnicodeText, nullable=False)   # 文章摘要（Markdown）
     article_content: UnicodeText = Column('article_content', UnicodeText, nullable=False)   # 文章正文（Markdown）
-    article_category: Integer = Column('article_category', Integer, nullable=False)   # 文章类型id
+    article_category_id: Integer = Column('article_category_id', Integer, nullable=False)   # 文章类型id
 
     def __repr__(self):
         return (f'Articles(article_id={self.article_id}, article_title={self.article_title}, '

@@ -23,7 +23,7 @@ async def get_article_info(
                 Articles.series_id,
                 Articles.update_time,
                 Articles.article_cover,
-                Articles.article_category
+                Articles.article_category_id
             )
             .order_by(Articles.update_time)
             .limit(skip)
@@ -37,9 +37,9 @@ async def get_article_info(
                 Articles.series_id,
                 Articles.update_time,
                 Articles.article_cover,
-                Articles.article_category
+                Articles.article_category_id
             )
-            .where(or_(Articles.article_category == category))
+            .where(or_(Articles.article_category_id == category))
             .order_by(Articles.update_time)
             .limit(skip)
             .offset((page-1) * skip)
@@ -56,7 +56,7 @@ async def get_article_info_page_count(
 ) -> int:
     stmt = (
         select(func.count(Articles.article_id))
-        .where(or_(Articles.article_category == category))
+        .where(or_(Articles.article_category_id == category))
     )
     result = await session.scalars(stmt)
     total_page = max(1, math.ceil(result.first() / limit))
@@ -78,17 +78,19 @@ async def create_article(
         article_cover: str,
         article_abstract: str,
         article_content: str,
+        article_category_id: int,
         session: AsyncSession,
-        article_category: str = None,
+        series_id: str = None,
 ):
     update_time = datetime.datetime.now()
-    if article_category is None:
+    if series_id is None:
         article = Articles(
             article_title=article_title,
             article_cover=article_cover,
             article_abstract=article_abstract,
             article_content=article_content,
             update_time=update_time,
+            article_category_id=article_category_id,
         )
     else:
         article = Articles(
@@ -97,7 +99,8 @@ async def create_article(
             article_abstract=article_abstract,
             article_content=article_content,
             update_time=update_time,
-            article_category=article_category
+            article_category_id=article_category_id,
+            series_id=series_id
         )
     session.add_all(
         [article, ]
