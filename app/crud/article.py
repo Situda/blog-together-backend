@@ -5,7 +5,6 @@ from typing import Sequence
 from fastapi.params import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_database
-from app.schemas.article import ArticleInfo, Items
 from sqlalchemy import select, or_, func
 from app.models.article import Articles
 from loguru import logger
@@ -21,7 +20,7 @@ async def get_article_info(
             select(
                 Articles.article_id,
                 Articles.article_title,
-                Articles.article_series,
+                Articles.series_id,
                 Articles.update_time,
                 Articles.article_cover,
                 Articles.article_category
@@ -35,7 +34,7 @@ async def get_article_info(
             select(
                 Articles.article_id,
                 Articles.article_title,
-                Articles.article_series,
+                Articles.series_id,
                 Articles.update_time,
                 Articles.article_cover,
                 Articles.article_category

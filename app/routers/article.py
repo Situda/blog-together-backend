@@ -61,9 +61,9 @@ async def articles_by_category(
             content = {
                 "info": {
                     "page": filter_params.skip,
-                    "total_page": await get_article_info_page_count(filter_params.category, filter_params.limit, session)
+                    "total_page": await get_article_info_page_count(filter_params.category_name, filter_params.limit, session)
                 },
-                "article_list": await get_article_info(filter_params.category, filter_params.skip, filter_params.limit, session)
+                "article_list": await get_article_info(filter_params.category_name, filter_params.skip, filter_params.limit, session)
             }
             return OKResponse(content=content)
         except Exception as e:
