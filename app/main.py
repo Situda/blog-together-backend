@@ -38,7 +38,7 @@ async def lifespan(api: FastAPI) -> AsyncGenerator[dict[str, AsyncEngine | async
 app = FastAPI(
     title="Blog Together Backend",
     lifespan=lifespan,
-    version="0.0.1-Alpha"
+    version="0.0.2-Alpha"
 )
 
 # 白名单url

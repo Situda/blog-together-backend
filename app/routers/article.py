@@ -4,7 +4,11 @@ from fastapi.responses import JSONResponse
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
-from app.crud.article import get_article_info, get_article_info_page_count, get_article
+from app.crud.article import (get_article_info,
+                              get_article_info_page_count,
+                              get_article,
+                              get_series_id,
+                              create_article, get_category_id)
 from app.database import get_database
 from typing import Annotated
 from app.api_responser import TodoResponse, OKResponse, ErrorResponse
@@ -131,5 +135,29 @@ async def post_articles(
         creator_params: Annotated[ArticleCreatorParams, Query()],
         session: AsyncSession = Depends(get_database)
 ):
-    # TODO: 马上需要实现
-    return TodoResponse()
+    """
+
+    :param creator_params:
+        article_title: 文章标题
+        series_name: 文章所属系列名
+        article_cover: 封面URL
+        article_abstract: 文章摘要
+        article_content: 文章内容
+        category_name: 文章所属类别名
+    :param session: 会话工厂
+    :return:
+    """
+    try:
+        content = await create_article(
+            article_title=creator_params.article_title,
+            article_cover=creator_params.article_cover,
+            article_abstract=creator_params.article_abstract,
+            article_content=creator_params.article_content,
+            article_category_id=await get_category_id(creator_params.category_name, session=session),
+            series_id=await get_series_id(creator_params.series_name, session=session),
+            session=session
+        )
+    except Exception as e:
+        logger.error(e)
+        return ErrorResponse(e)
+    return OKResponse(content=content)
