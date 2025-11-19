@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class ArticleAndSeriesFilterParams(BaseModel):
@@ -10,8 +10,8 @@ class ArticleAndSeriesFilterParams(BaseModel):
     """
     category_name: str = "all"
     is_series: bool = False
-    skip: int = 1
-    limit: int = 9
+    skip: int = Field(1, ge=1)
+    limit: int = Field(9, ge=1)
 
 class ArticleInfo(BaseModel):
     article_id: int

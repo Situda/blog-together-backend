@@ -31,7 +31,7 @@ async def articles_by_category(
     """
     获取全部文章
     :param filter_params:
-        category: 文章category，可选，默认"all"，表示查询所有文章
+        category_name: 文章category，可选，默认"all"，表示查询所有文章
         is_series: 系列文章过滤器，True表示只返回系列文章的入口信息，False表示返回单个文章和系列文章的信息，默认False
          skip: 文章分页时的第几页，默认1
         limit: 每页的返回文章信息数量，默认9
@@ -52,7 +52,7 @@ async def articles_by_category(
                 article_series: 文章所属系列的id，可能为空,
                 update_time: 文章更新日期,
                 article_cover: 文章封面的URL,
-                article_category: 文章所属category的id,
+                article_category_id: 文章所属category的id,
             }
             ```
     """
@@ -61,16 +61,29 @@ async def articles_by_category(
         return TodoResponse()
     else:
         try:
+            total_page = await get_article_info_page_count(filter_params.category_name, filter_params.limit, session)
+            if filter_params.skip > total_page:
+                raise ValueError(f"最大页数为{total_page}，但是获取到的页数skip={filter_params.skip}")
+            article_list = await get_article_info(filter_params.category_name,
+                                                  filter_params.skip,
+                                                  filter_params.limit,
+                                                  session)
             content = {
                 "info": {
                     "page": filter_params.skip,
-                    "total_page": await get_article_info_page_count(filter_params.category_name, filter_params.limit, session)
+                    "total_page": total_page
                 },
-                "article_list": await get_article_info(filter_params.category_name, filter_params.skip, filter_params.limit, session)
+                "article_list": article_list
             }
             return OKResponse(content=content)
-        except Exception as e:
+        except ValueError as e:
             logger.error(e)
+            return ErrorResponse(e)
+        except TypeError as e:
+            logger.error(e)
+            return ErrorResponse(e)
+        except Exception as e:
+            logger.exception(e)
             return ErrorResponse(e)
 
 
