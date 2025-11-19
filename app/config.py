@@ -1,3 +1,6 @@
+import sys
+from typing import TextIO
+
 import tomlkit
 import os
 from sqlalchemy import URL, create_engine, text
@@ -43,3 +46,14 @@ def get_database_url():
     else:
         raise Exception(f"Unknown database type: {database_config['type']}. Please use `sqlite` or `mysql`.")
     return database_url
+
+def get_logger_config():
+    root_dir = os.path.abspath(os.path.dirname(__file__))
+    with open(f"{root_dir}/../config.toml", encoding='utf-8') as f:
+        config: dict = tomlkit.parse(f.read())
+    logger_config: dict = config['logger']
+    output_path: TextIO | str = sys.stderr
+    if logger_config["output_path"] is not None and len(logger_config["output_path"]) != 0:
+        output_path: str = logger_config["output_path"]
+    log_level: str = logger_config['level'].upper()
+    return output_path, log_level

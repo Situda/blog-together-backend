@@ -3,16 +3,15 @@ from fastapi.params import Depends
 from fastapi.responses import JSONResponse
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
-from starlette import status
 from app.crud.article import (get_article_info,
                               get_article_info_page_count,
                               get_article,
                               get_series_id,
-                              create_article, get_category_id)
+                              create_article, get_category_id, create_category, get_all_categories)
 from app.database import get_database
 from typing import Annotated
 from app.api_responser import TodoResponse, OKResponse, ErrorResponse
-from app.schemas.article import ArticleAndSeriesFilterParams, ArticleCreatorParams
+from app.schemas.article import ArticleAndSeriesFilterParams, ArticleCreatorParams, ArticleCategoryCreatorParams
 
 router = APIRouter(
     prefix="/articles",
@@ -32,7 +31,7 @@ async def articles_by_category(
     """
     获取全部文章
     :param filter_params:
-        category: 文章category，可选，默认"all"，表示查询所有文章
+        category_name: 文章category，可选，默认"all"，表示查询所有文章
         is_series: 系列文章过滤器，True表示只返回系列文章的入口信息，False表示返回单个文章和系列文章的信息，默认False
          skip: 文章分页时的第几页，默认1
         limit: 每页的返回文章信息数量，默认9
@@ -53,7 +52,7 @@ async def articles_by_category(
                 article_series: 文章所属系列的id，可能为空,
                 update_time: 文章更新日期,
                 article_cover: 文章封面的URL,
-                article_category: 文章所属category的id,
+                article_category_id: 文章所属category的id,
             }
             ```
     """
@@ -62,31 +61,44 @@ async def articles_by_category(
         return TodoResponse()
     else:
         try:
+            total_page = await get_article_info_page_count(filter_params.category_name, filter_params.limit, session)
+            if filter_params.skip > total_page:
+                raise ValueError(f"最大页数为{total_page}，但是获取到的页数skip={filter_params.skip}")
+            article_list = await get_article_info(filter_params.category_name,
+                                                  filter_params.skip,
+                                                  filter_params.limit,
+                                                  session)
             content = {
                 "info": {
                     "page": filter_params.skip,
-                    "total_page": await get_article_info_page_count(filter_params.category_name, filter_params.limit, session)
+                    "total_page": total_page
                 },
-                "article_list": await get_article_info(filter_params.category_name, filter_params.skip, filter_params.limit, session)
+                "article_list": article_list
             }
             return OKResponse(content=content)
-        except Exception as e:
+        except ValueError as e:
             logger.error(e)
+            return ErrorResponse(e)
+        except TypeError as e:
+            logger.error(e)
+            return ErrorResponse(e)
+        except Exception as e:
+            logger.exception(e)
             return ErrorResponse(e)
 
 
-@router.get("/{article_id}", summary="查询文章信息")
+@router.get("/article", summary="查询文章信息")
 async def article_by_id(
-        article_id: Annotated[int, Path(title="article_id")],
+        article_id: Annotated[int, Query()],
         session: AsyncSession = Depends(get_database)
-):
+) -> JSONResponse:
     """
     根据id获取某一文章的全部信息
     :param article_id: 文章的id
     :param session: 会话工厂
-    :return: 文章的完整信息Json，文章不存在或查询失败会返回404错误码和错误信息
+    :return: 文章的完整信息Json，文章不存在或查询失败会返回404错误码和错误信息，==注意，这是一个只有一个字典的列表，而不是一个字典==
             ```
-            {
+            [{
                 "article_id": 文章id,
                 "article_title": 文章标题,
                 "article_series": 文章所属系列的id，可能为空,
@@ -95,7 +107,7 @@ async def article_by_id(
                 "article_abstract": 文章摘要（Markdown）,
                 "article_content": 文章正文（Markdown）,
                 "article_category": 文章所属category的id
-            }
+            }]
             ```
     """
     try:
@@ -107,8 +119,10 @@ async def article_by_id(
         logger.error(e)
         return ErrorResponse(e)
 
-@router.get("/categories", summary="待实现")
-async def article_categories():
+@router.get("/categories", summary="查询文章的所有的类别")
+async def article_categories(
+        session: AsyncSession = Depends(get_database)
+) -> JSONResponse:
     """
     获取所有category的列表
     :return: 一个列表，其每个元素的值为如下
@@ -119,7 +133,12 @@ async def article_categories():
             }
             ```
     """
-    return
+    try:
+        content = await get_all_categories(session=session)
+    except Exception as e:
+        logger.exception(e)
+        return ErrorResponse(e)
+    return OKResponse(content=content)
 
 @router.get("/series/{series_id}", summary="待实现")
 async def series_by_id(series_id: int):
@@ -130,13 +149,13 @@ async def series_by_id(series_id: int):
     """
     pass
 
-@router.post("/post/articles")
-async def post_articles(
+@router.post("/post/article", summary="上传文章")
+async def post_article(
         creator_params: Annotated[ArticleCreatorParams, Query()],
         session: AsyncSession = Depends(get_database)
-):
+) -> JSONResponse:
     """
-
+    上传文章
     :param creator_params:
         article_title: 文章标题
         series_name: 文章所属系列名
@@ -145,7 +164,7 @@ async def post_articles(
         article_content: 文章内容
         category_name: 文章所属类别名
     :param session: 会话工厂
-    :return:
+    :return: 如果正常上传返回包含True的一个JSONResponse，否则抛出异常并返回包含错误信息的JSONResponse
     """
     try:
         content = await create_article(
@@ -155,6 +174,28 @@ async def post_articles(
             article_content=creator_params.article_content,
             article_category_id=await get_category_id(creator_params.category_name, session=session),
             series_id=await get_series_id(creator_params.series_name, session=session),
+            session=session
+        )
+    except Exception as e:
+        logger.error(e)
+        return ErrorResponse(e)
+    return OKResponse(content=content)
+
+@router.post("/post/category", summary="上传文章类别")
+async def post_categories(
+        creator_params: Annotated[ArticleCategoryCreatorParams, Query()],
+        session: AsyncSession = Depends(get_database)
+) -> JSONResponse:
+    """
+    上传文章类别
+    :param creator_params:
+        - article_category_name: 文章类别名
+    :param session: 会话工厂
+    :return: 如果正常上传返回包含True的一个JSONResponse，否则抛出异常并返回包含错误信息的JSONResponse
+    """
+    try:
+        content = await create_category(
+            article_category_name=creator_params.article_category_name,
             session=session
         )
     except Exception as e:

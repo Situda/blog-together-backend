@@ -1,20 +1,43 @@
 import datetime
 import math
-from typing import Sequence, Optional
+from typing import Optional, Sequence
 
-from fastapi.params import Depends
-from sqlalchemy.ext.asyncio import AsyncSession
-from app.database import get_database
-from sqlalchemy import select, or_, func
-from app.models.article import Articles, ArticleSeries, ArticleCategories
 from loguru import logger
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, or_, func, RowMapping
+from app.models.article import Articles, ArticleSeries, ArticleCategories
+
 
 async def get_article_info(
         category: str,
-        page: int,
         skip: int,
+        limit: int,
         session: AsyncSession
-):
+) -> Sequence[RowMapping]:
+    """
+    根据类别返回查询列表
+    :param category: 类别
+    :param skip: 查询页数
+    :param limit: 每页最大查询数
+    :param session: 会话工厂
+    :return: 一个包含文章信息的列表，列表的每个元素是一个如下的JSON:
+            {
+                "info": {
+                    "page": 当前页数,
+                    "total_page": 总页数
+                }
+                "article_list": 文章列表
+            }
+            其中，"article_list"是一个文章列表，其每个元素为如下JSON:
+            {
+                article_id: 文章id,
+                article_title: 文章标题,
+                article_series: 文章所属系列的id，可能为空,
+                update_time: 文章更新日期,
+                article_cover: 文章封面的URL,
+                article_category_id: 文章所属category的id,
+            }
+    """
     if category == "all":
         stmt = (
             select(
@@ -26,8 +49,8 @@ async def get_article_info(
                 Articles.article_category_id
             )
             .order_by(Articles.update_time)
-            .limit(skip)
-            .offset((page - 1) * skip)
+            .limit(limit)
+            .offset((skip - 1) * limit)
         )
     else:
         stmt = (
@@ -41,25 +64,32 @@ async def get_article_info(
             )
             .where(or_(Articles.article_category_id == category))
             .order_by(Articles.update_time)
-            .limit(skip)
-            .offset((page-1) * skip)
+            .limit(limit)
+            .offset((skip - 1) * limit)
         )
     result = await session.execute(stmt)
-    content = result.scalars()
-    # logger.debug(content.fetchall())
-    return content.fetchall()
+    content = result.mappings().fetchall()
+    return content
 
 async def get_article_info_page_count(
-        category: str,
+        article_category_name: str,
         limit: int,
         session: AsyncSession
 ) -> int:
-    stmt = (
-        select(func.count(Articles.article_id))
-        .where(or_(Articles.article_category_id == category))
-    )
+    if article_category_name == "all":
+        stmt = (
+            select(func.count(Articles.article_id))
+        )
+    else:
+        article_category_id = await get_category_id(article_category_name, session)
+        stmt = (
+            select(func.count(Articles.article_id).label("articles_count"))
+            .where(or_(Articles.article_category_id == article_category_id))
+        )
     result = await session.scalars(stmt)
-    total_page = max(1, math.ceil(result.first() / limit))
+    total_page = math.ceil(result.first() / limit)
+    total_page = max(1, total_page)
+    logger.debug(f"article_category_name={article_category_name}, SQL: {stmt}, 总页数{total_page}")
     return total_page
 
 async def get_article(
@@ -67,11 +97,22 @@ async def get_article(
         session: AsyncSession
 ):
     stmt = (
-        select(Articles)
+        select(
+            Articles.article_id,
+            Articles.article_title,
+            Articles.series_id,
+            Articles.update_time,
+            Articles.article_cover,
+            Articles.article_abstract,
+            Articles.article_content,
+            Articles.article_category_id
+        )
         .where(or_(Articles.article_id == article_id))
     )
-    result = await session.scalars(stmt)
-    return result.first()
+    result = await session.execute(stmt)
+    content = result.mappings().fetchall()
+    logger.debug(f"content={content}")
+    return content
 
 async def create_article(
         article_title: str,
@@ -81,9 +122,9 @@ async def create_article(
         article_category_id: Optional[int],
         series_id: int,
         session: AsyncSession,
-):
+) -> bool:
     """
-    创建一个文章，如果创建失败会抛出异常并终止，该异常的抛出依赖于AsyncSession.add_all()方法
+    创建一个文章，如果创建失败会抛出异常并终止，该异常的抛出依赖于AsyncSession.add()方法
     :param article_title: 文章标题
     :param article_cover: 封面URL
     :param article_abstract: 文章摘要
@@ -113,9 +154,7 @@ async def create_article(
             article_category_id=article_category_id,
             series_id=series_id
         )
-    session.add_all(
-        [article, ]
-    )
+    session.add(article)
     await session.commit()
     return True
 
@@ -152,9 +191,44 @@ async def get_category_id(
                 .where(or_(ArticleCategories.article_category_name == category_name)))
         result = await session.scalars(stmt)
         try:
-            article_category_id = result.first()[0]
+            article_category_id = result.first()
+            if article_category_id is None and category_name != "all":
+                raise TypeError(f"{category_name}不存在！")
         except TypeError as e:
-            raise Exception(f"category_name={category_name}，该category_name可能并不存在，因而触发异常{e}")
+            raise TypeError(f"category_name={category_name}，该category_name可能并不存在，因而触发异常{e}")
+        except Exception as e:
+            raise e
         return article_category_id
     else:
         raise Exception("category_name不能为空")
+
+async def create_category(
+        article_category_name: str,
+        session: AsyncSession
+) -> bool:
+    """
+    创建一个类别，如果创建失败会抛出异常并终止，该异常的抛出依赖于AsyncSession方法
+    :param article_category_name: 文章类别名
+    :param session: 会话工厂
+    :return: 如果创建成功，返回True
+    """
+    category = ArticleCategories(
+        article_category_name=article_category_name
+    )
+    session.add(category)
+    await session.commit()
+    return True
+
+async def get_all_categories(
+        session: AsyncSession,
+):
+    stmt = (
+        select(ArticleCategories.article_category_id,
+               ArticleCategories.article_category_name)
+    )
+    result = await session.execute(stmt)
+    content = result.mappings().fetchall()
+    logger.debug(f"content={content}")
+    return content
+
+
