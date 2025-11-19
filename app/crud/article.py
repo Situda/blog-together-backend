@@ -79,7 +79,7 @@ async def create_article(
         session: AsyncSession,
 ):
     """
-    创建一个文章，如果创建失败会抛出异常并终止，该异常的抛出依赖于AsyncSession.add_all()方法
+    创建一个文章，如果创建失败会抛出异常并终止，该异常的抛出依赖于AsyncSession.add()方法
     :param article_title: 文章标题
     :param article_cover: 封面URL
     :param article_abstract: 文章摘要
@@ -109,9 +109,7 @@ async def create_article(
             article_category_id=article_category_id,
             series_id=series_id
         )
-    session.add_all(
-        [article, ]
-    )
+    session.add(article)
     await session.commit()
     return True
 
@@ -148,9 +146,27 @@ async def get_category_id(
                 .where(or_(ArticleCategories.article_category_name == category_name)))
         result = await session.scalars(stmt)
         try:
-            article_category_id = result.first()[0]
+            article_category_id = result.first()
         except TypeError as e:
             raise Exception(f"category_name={category_name}，该category_name可能并不存在，因而触发异常{e}")
         return article_category_id
     else:
         raise Exception("category_name不能为空")
+
+async def create_category(
+        article_category_name: str,
+        session: AsyncSession
+):
+    """
+    创建一个类别，如果创建失败会抛出异常并终止，该异常的抛出依赖于AsyncSession方法
+    :param article_category_name: 文章类别名
+    :param session: 会话工厂
+    :return: 如果创建成功，返回True
+    """
+    category = ArticleCategories(
+        article_category_name=article_category_name
+    )
+    session.add(category)
+    await session.commit()
+    return True
+

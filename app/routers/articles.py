@@ -7,11 +7,11 @@ from app.crud.article import (get_article_info,
                               get_article_info_page_count,
                               get_article,
                               get_series_id,
-                              create_article, get_category_id)
+                              create_article, get_category_id, create_category)
 from app.database import get_database
 from typing import Annotated
 from app.api_responser import TodoResponse, OKResponse, ErrorResponse
-from app.schemas.article import ArticleAndSeriesFilterParams, ArticleCreatorParams
+from app.schemas.article import ArticleAndSeriesFilterParams, ArticleCreatorParams, ArticleCategoryCreatorParams
 
 router = APIRouter(
     prefix="/articles",
@@ -78,7 +78,7 @@ async def articles_by_category(
 async def article_by_id(
         article_id: Annotated[int, Path(title="article_id")],
         session: AsyncSession = Depends(get_database)
-):
+) -> JSONResponse:
     """
     根据id获取某一文章的全部信息
     :param article_id: 文章的id
@@ -129,11 +129,11 @@ async def series_by_id(series_id: int):
     """
     pass
 
-@router.post("/post/articles", summary="上传文章")
-async def post_articles(
+@router.post("/post/article", summary="上传文章")
+async def post_article(
         creator_params: Annotated[ArticleCreatorParams, Query()],
         session: AsyncSession = Depends(get_database)
-):
+) -> JSONResponse:
     """
     上传文章
     :param creator_params:
@@ -144,7 +144,7 @@ async def post_articles(
         article_content: 文章内容
         category_name: 文章所属类别名
     :param session: 会话工厂
-    :return:
+    :return: 如果正常上传返回包含True的一个JSONResponse，否则抛出异常并返回包含错误信息的JSONResponse
     """
     try:
         content = await create_article(
@@ -154,6 +154,28 @@ async def post_articles(
             article_content=creator_params.article_content,
             article_category_id=await get_category_id(creator_params.category_name, session=session),
             series_id=await get_series_id(creator_params.series_name, session=session),
+            session=session
+        )
+    except Exception as e:
+        logger.error(e)
+        return ErrorResponse(e)
+    return OKResponse(content=content)
+
+@router.post("/post/category", summary="上传文章类别")
+async def post_categories(
+        creator_params: Annotated[ArticleCategoryCreatorParams, Query()],
+        session: AsyncSession = Depends(get_database)
+) -> JSONResponse:
+    """
+    上传文章类别
+    :param creator_params:
+        - article_category_name: 文章类别名
+    :param session: 会话工厂
+    :return: 如果正常上传返回包含True的一个JSONResponse，否则抛出异常并返回包含错误信息的JSONResponse
+    """
+    try:
+        content = await create_category(
+            article_category_name=creator_params.article_category_name,
             session=session
         )
     except Exception as e:

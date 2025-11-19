@@ -38,3 +38,9 @@ class ArticleCreatorParams(BaseModel):
     article_abstract: str
     article_content: str
     category_name: str
+
+class ArticleCategoryCreatorParams(BaseModel):
+    """
+    :param article_category_name: 文章类别名
+    """
+    article_category_name: str
