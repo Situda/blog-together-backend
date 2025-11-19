@@ -96,9 +96,9 @@ async def article_by_id(
     根据id获取某一文章的全部信息
     :param article_id: 文章的id
     :param session: 会话工厂
-    :return: 文章的完整信息Json，文章不存在或查询失败会返回404错误码和错误信息
+    :return: 文章的完整信息Json，文章不存在或查询失败会返回404错误码和错误信息，==注意，这是一个只有一个字典的列表，而不是一个字典==
             ```
-            {
+            [{
                 "article_id": 文章id,
                 "article_title": 文章标题,
                 "article_series": 文章所属系列的id，可能为空,
@@ -107,7 +107,7 @@ async def article_by_id(
                 "article_abstract": 文章摘要（Markdown）,
                 "article_content": 文章正文（Markdown）,
                 "article_category": 文章所属category的id
-            }
+            }]
             ```
     """
     try:

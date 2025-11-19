@@ -97,11 +97,22 @@ async def get_article(
         session: AsyncSession
 ):
     stmt = (
-        select(Articles)
+        select(
+            Articles.article_id,
+            Articles.article_title,
+            Articles.series_id,
+            Articles.update_time,
+            Articles.article_cover,
+            Articles.article_abstract,
+            Articles.article_content,
+            Articles.article_category_id
+        )
         .where(or_(Articles.article_id == article_id))
     )
-    result = await session.scalars(stmt)
-    return result.first()
+    result = await session.execute(stmt)
+    content = result.mappings().fetchall()
+    logger.debug(f"content={content}")
+    return content
 
 async def create_article(
         article_title: str,
