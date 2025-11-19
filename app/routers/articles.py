@@ -129,13 +129,13 @@ async def series_by_id(series_id: int):
     """
     pass
 
-@router.post("/post/articles")
+@router.post("/post/articles", summary="上传文章")
 async def post_articles(
         creator_params: Annotated[ArticleCreatorParams, Query()],
         session: AsyncSession = Depends(get_database)
 ):
     """
-
+    上传文章
     :param creator_params:
         article_title: 文章标题
         series_name: 文章所属系列名

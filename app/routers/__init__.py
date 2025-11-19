@@ -1,1 +1,1 @@
-import app.routers.article as article
+import app.routers.articles as articles
