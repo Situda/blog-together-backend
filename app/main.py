@@ -1,3 +1,4 @@
+import sys
 from typing import TypedDict, AsyncIterator, Any, AsyncGenerator
 
 from fastapi.params import Depends
@@ -12,6 +13,8 @@ from fastapi.middleware.cors import CORSMiddleware
 import app.routers as routers
 from contextlib import asynccontextmanager
 
+from app.config import get_logger_config
+
 
 class AppState(TypedDict):
     engine: AsyncEngine
@@ -20,8 +23,15 @@ class AppState(TypedDict):
 
 @asynccontextmanager
 async def lifespan(api: FastAPI) -> AsyncGenerator[dict[str, AsyncEngine | async_sessionmaker[AsyncSession]], None]:
-    # 初始化数据库
     logger.info("程序启动中……")
+
+    # 设置日志等级
+    logger.remove()
+    output_path, log_level = get_logger_config()
+    logger.add(output_path, level=log_level)
+    logger.info(f"已设置日志输出路径为{log_level}，输出等级为{log_level}")
+
+    # 初始化数据库
     engine, session_factory = await db.setup_database_connection()
     await db.init_database_tables(engine)
     # await db.create_db()

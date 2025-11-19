@@ -6,3 +6,8 @@ password = ""  # sqlite无须指定
 host = "localhost"  # 默认localhost，可修改
 port = ""  # 数据库端口，默认为""
 name = "blog_data"  # 默认为blog_data，请确保mysql中存在该数据库，type = "sqlite"时会在项目根目录下创建同名sqlite数据库文件
+
+# 日志设置
+[logger]
+output_path = ""
+level = "INFO"
