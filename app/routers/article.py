@@ -3,7 +3,6 @@ from fastapi.params import Depends
 from fastapi.responses import JSONResponse
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
-from starlette import status
 from app.crud.article import (get_article_info,
                               get_article_info_page_count,
                               get_article,

@@ -1,13 +1,9 @@
 import datetime
 import math
-from typing import Sequence, Optional
-
-from fastapi.params import Depends
+from typing import Optional
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.database import get_database
 from sqlalchemy import select, or_, func
 from app.models.article import Articles, ArticleSeries, ArticleCategories
-from loguru import logger
 
 async def get_article_info(
         category: str,
