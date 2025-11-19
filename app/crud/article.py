@@ -1,10 +1,10 @@
 import datetime
 import math
-from typing import Optional
+from typing import Optional, Sequence
 
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, or_, func
+from sqlalchemy import select, or_, func, RowMapping
 from app.models.article import Articles, ArticleSeries, ArticleCategories
 
 
@@ -13,7 +13,7 @@ async def get_article_info(
         skip: int,
         limit: int,
         session: AsyncSession
-):
+) -> Sequence[RowMapping]:
     """
     根据类别返回查询列表
     :param category: 类别
@@ -122,7 +122,7 @@ async def create_article(
         article_category_id: Optional[int],
         series_id: int,
         session: AsyncSession,
-):
+) -> bool:
     """
     创建一个文章，如果创建失败会抛出异常并终止，该异常的抛出依赖于AsyncSession.add()方法
     :param article_title: 文章标题
@@ -205,7 +205,7 @@ async def get_category_id(
 async def create_category(
         article_category_name: str,
         session: AsyncSession
-):
+) -> bool:
     """
     创建一个类别，如果创建失败会抛出异常并终止，该异常的抛出依赖于AsyncSession方法
     :param article_category_name: 文章类别名
@@ -218,4 +218,17 @@ async def create_category(
     session.add(category)
     await session.commit()
     return True
+
+async def get_all_categories(
+        session: AsyncSession,
+):
+    stmt = (
+        select(ArticleCategories.article_category_id,
+               ArticleCategories.article_category_name)
+    )
+    result = await session.execute(stmt)
+    content = result.mappings().fetchall()
+    logger.debug(f"content={content}")
+    return content
+
 

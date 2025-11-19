@@ -7,7 +7,7 @@ from app.crud.article import (get_article_info,
                               get_article_info_page_count,
                               get_article,
                               get_series_id,
-                              create_article, get_category_id, create_category)
+                              create_article, get_category_id, create_category, get_all_categories)
 from app.database import get_database
 from typing import Annotated
 from app.api_responser import TodoResponse, OKResponse, ErrorResponse
@@ -87,9 +87,9 @@ async def articles_by_category(
             return ErrorResponse(e)
 
 
-@router.get("/{article_id}", summary="查询文章信息")
+@router.get("/article", summary="查询文章信息")
 async def article_by_id(
-        article_id: Annotated[int, Path(title="article_id")],
+        article_id: Annotated[int, Query()],
         session: AsyncSession = Depends(get_database)
 ) -> JSONResponse:
     """
@@ -119,8 +119,10 @@ async def article_by_id(
         logger.error(e)
         return ErrorResponse(e)
 
-@router.get("/categories", summary="待实现")
-async def article_categories():
+@router.get("/categories", summary="查询文章的所有的类别")
+async def article_categories(
+        session: AsyncSession = Depends(get_database)
+) -> JSONResponse:
     """
     获取所有category的列表
     :return: 一个列表，其每个元素的值为如下
@@ -131,7 +133,12 @@ async def article_categories():
             }
             ```
     """
-    return
+    try:
+        content = await get_all_categories(session=session)
+    except Exception as e:
+        logger.exception(e)
+        return ErrorResponse(e)
+    return OKResponse(content=content)
 
 @router.get("/series/{series_id}", summary="待实现")
 async def series_by_id(series_id: int):
